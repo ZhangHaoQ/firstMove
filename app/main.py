@@ -100,61 +100,6 @@ async def get_latest_flashes(
         logger.error(f"Error retrieving latest AI-analyzed flashes (last 24h): {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not retrieve latest AI-analyzed flashes from the database.")
 
-# /* Commenting out SSE related functions
-# async def new_flash_event_generator(request: Request):
-#     pubsub = async_redis_client.pubsub()
-#     channel_name = 'new_flashes_channel'
-#     try:
-#         logger.info(f"[SSE GEN DEBUG] Attempting to subscribe to Redis channel: '{channel_name}'")
-#         await pubsub.subscribe(channel_name) 
-#         logger.info(f"[SSE GEN DEBUG] Successfully subscribed to Redis channel: '{channel_name}'")
-#         
-#         while True:
-#             if await request.is_disconnected():
-#                 logger.info("[SSE GEN DEBUG] Client disconnected from SSE stream.")
-#                 break
-#             try:
-#                 # Use timeout in get_message to allow checking for client disconnect periodically
-#                 # and to prevent blocking indefinitely if no messages are coming.
-#                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-#                 
-#                 if message:
-#                     logger.info(f"[SSE GEN DEBUG] Received raw message from Redis Pub/Sub: {message}")
-#                     if message["type"] == "message":
-#                         message_data_str = message['data'] 
-#                         logger.info(f"[SSE GEN DEBUG] Sending SSE data (first 500 chars): {message_data_str[:500]}...")
-#                         yield f"data: {message_data_str}\n\n"
-#                     else:
-#                         logger.info(f"[SSE GEN DEBUG] Received non-data message from Pub/Sub: {message['type']}")
-#                 else:
-#                     await asyncio.sleep(0.01) 
-#             
-#             except asyncio.TimeoutError:
-#                 continue 
-#             except Exception as e:
-#                 logger.error(f"[SSE GEN DEBUG] Error in Redis Pub/Sub message loop: {e}", exc_info=True)
-#                 await asyncio.sleep(1) 
-# 
-#     except asyncio.CancelledError:
-#         logger.info("[SSE GEN DEBUG] SSE Task Cancelled (client likely disconnected or server shutting down).")
-#     except Exception as e:
-#         logger.error(f"[SSE GEN DEBUG] Error in SSE event generator setup or outer loop: {e}", exc_info=True)
-#     finally:
-#         logger.info(f"[SSE GEN DEBUG] Cleaning up SSE generator. Unsubscribing from '{channel_name}'.")
-#         if pubsub:
-#             try:
-#                 await pubsub.unsubscribe(channel_name)
-#                 await pubsub.close() 
-#                 logger.info(f"[SSE GEN DEBUG] Successfully unsubscribed and closed PubSub for '{channel_name}'.")
-#             except Exception as e_close:
-#                  logger.error(f"[SSE GEN DEBUG] Error during pubsub unsubscribe/close for '{channel_name}': {e_close}", exc_info=True)
-#         logger.info("[SSE GEN DEBUG] SSE event generator finished.")
-# 
-# @app.get("/flashes/stream/")
-# async def stream_flashes(request: Request):
-#     return StreamingResponse(new_flash_event_generator(request), media_type="text/event-stream")
-# */
-
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 

@@ -1,14 +1,10 @@
 # tasks.py
-import json # Celery 任务可能直接处理JSON，或者redis_client中的辅助函数处理
 from datetime import datetime, timezone
-import pytz # 用于将ISO 8601时间字符串转为datetime对象，再获取时间戳
-from celery import chain
 
-from core.celery_setup import app # 导入Celery app实例
+from core.celery.celery_setup import app # 导入Celery app实例
 from core.redis.client import (
     redis_client, 
     SINA_LIVE_FLASHES_LAST_PROCESSED_ID_KEY,
-    FLASH_DATA_PREFIX,
     SYMBOL_FLASHES_PREFIX,
     ALL_FLASHES_BY_TIME_KEY, # 导入新的 Key
     get_flash_data, # 显式导入辅助函数
@@ -26,7 +22,7 @@ logger = get_task_logger(__name__)
 # 也可以在 celery_app.py 中定义，或通过命令行参数传递给 beat 服务。
 app.conf.beat_schedule = {
     'fetch-sina-flashes-every-60-seconds': {
-        'task': 'app.tasks.fetch_sina_live_flashes_and_store', # 更新任务的名称
+        'task': 'core.celery.tasks.fetch_sina_live_flashes_and_store', # 使用完整的任务路径
         'schedule': 60.0,  # 每 60 秒执行一次
         # 'args': (arg1, arg2), # 如果任务需要固定参数，可以在这里指定
     },

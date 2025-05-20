@@ -35,6 +35,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
             "summary": None,
             "sentiment": None,
             "analysis_type": None,
+            "category": None,
             "stock_specific_analysis": None,
             "macro_analysis": None
         }
@@ -44,6 +45,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
         "summary": "快讯的简明摘要（不超过80字）",
         "sentiment": "快讯的整体市场情绪（选项：积极, 中性, 消极）",
         "analysis_type": "分析类型（选项：stock_specific, macroeconomic, general_news_no_analysis）",
+        "category": "快讯的分类（选项：重大先机, 行业趋势, 风险警示, 政策动态, 市场看点, 其他）",
         "stock_specific_analysis": {
             "analyzed_symbol": "被分析股票的代码（例如SZ000001）或 \"不适用\"",
             "key_info_points": ["从快讯中提取的与该股票直接相关的核心信息点（1-3个）"] or ["信息不足"],
@@ -70,19 +72,27 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
 任务指令：
 1. 生成摘要：对快讯内容进行总结，不超过80字。
 2. 判断情绪：评估快讯所传达的整体市场情绪，从【积极, 中性, 消极】中选择一个。
-3. 进行深度分析：
-   - 如果提供了明确的“关联股票”列表：选择其中最受快讯内容影响的一只股票进行分析。
+3. 确定快讯分类：
+   对快讯进行分类，从以下选项中选择一个最匹配的：
+   - "重大先机"：可能带来重大投资机会的积极消息、技术突破、高增长预期等
+   - "行业趋势"：描述特定行业的发展动态、市场分析、供需变化等
+   - "风险警示"：针对特定股票的潜在风险、业绩下滑、负面事件等
+   - "政策动态"：关于宏观经济政策、行业法规、政府举措等的快讯
+   - "市场看点"：其他值得关注的积极或中性市场信息
+   - "其他"：不属于以上任何明确分类的快讯
+4. 进行深度分析：
+   - 如果提供了明确的"关联股票"列表：选择其中最受快讯内容影响的一只股票进行分析。
      设置 `analysis_type` 为 `stock_specific`。
      填充 `stock_specific_analysis` 对象中的所有字段。`macro_analysis` 设为 `null`。
-     注意：当 `analysis_type` 为 `stock_specific` 时，`stock_specific_analysis` 字段必须是一个完整的对象，即使某些子字段内容为“信息不足”或“不适用”；`macro_analysis` 字段此时应为 `null`。
-   - 如果未提供“关联股票”列表，或者快讯内容明显更侧重于宏观经济、政策或广泛的行业趋势：
+     注意：当 `analysis_type` 为 `stock_specific` 时，`stock_specific_analysis` 字段必须是一个完整的对象，即使某些子字段内容为"信息不足"或"不适用"；`macro_analysis` 字段此时应为 `null`。
+   - 如果未提供"关联股票"列表，或者快讯内容明显更侧重于宏观经济、政策或广泛的行业趋势：
      设置 `analysis_type` 为 `macroeconomic`。
      填充 `macro_analysis` 对象中的所有字段。`stock_specific_analysis` 设为 `null`。
      注意：当 `analysis_type` 为 `macroeconomic` 时，`macro_analysis` 字段必须是一个完整的对象，`stock_specific_analysis` 字段此时应为 `null`。
-   - 如果快讯内容非常简短、高度模糊、缺乏具体的财经数据/事件、纯属猜测/传闻且无明确影响对象，或者本质上不包含可供财经解读的实质信息（例如：“某某将出席会议”，“市场情绪整体平稳”，“XX公司CEO发表新年致辞”等此类无法直接转化为投资参考或经济趋势判断的内容）：
+   - 如果快讯内容非常简短、高度模糊、缺乏具体的财经数据/事件、纯属猜测/传闻且无明确影响对象，或者本质上不包含可供财经解读的实质信息（例如："某某将出席会议"，"市场情绪整体平稳"，"XX公司CEO发表新年致辞"等此类无法直接转化为投资参考或经济趋势判断的内容）：
      设置 `analysis_type` 为 `general_news_no_analysis`。
      此时，`stock_specific_analysis` 和 `macro_analysis` 字段必须为 `null`。
-     即便如此，也请尽可能提供对原始快讯的 `summary` 和 `sentiment`。
+     即便如此，也请尽可能提供对原始快讯的 `summary` 和 `sentiment`，以及 `category`。
 确保所有文本输出都使用中文。"""
 
     # 使用字符串加法显式拼接，并手动添加换行符
@@ -109,7 +119,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
 
     default_error_response = {
         "success": False,
-        "summary": None, "sentiment": None, "analysis_type": None,
+        "summary": None, "sentiment": None, "analysis_type": None, "category": None,
         "stock_specific_analysis": None, "macro_analysis": None
     }
 
@@ -149,21 +159,26 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
         summary = analysis_data.get("summary")
         sentiment = analysis_data.get("sentiment")
         analysis_type = analysis_data.get("analysis_type")
+        category = analysis_data.get("category")
 
-        if not all([summary, sentiment, analysis_type]):
+        if not all([summary, sentiment, analysis_type, category]):
             return {
-                **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type,
-                "error": f"LLM返回的JSON缺少必要的顶层字段 (summary, sentiment, analysis_type)。响应: {cleaned_response}"
+                **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type, "category": category,
+                "error": f"LLM返回的JSON缺少必要的顶层字段 (summary, sentiment, analysis_type, category)。响应: {cleaned_response}"
             }
         
         valid_sentiments = ["积极", "中性", "消极"]
         if sentiment not in valid_sentiments:
             print(f"警告: LLM返回的情绪标签 '{sentiment}' 不在预设范围 {valid_sentiments}。")
 
+        valid_categories = ["重大先机", "行业趋势", "风险警示", "政策动态", "市场看点", "其他"]
+        if category not in valid_categories:
+            print(f"警告: LLM返回的分类标签 '{category}' 不在预设范围 {valid_categories}。")
+
         valid_analysis_types = ["stock_specific", "macroeconomic", "general_news_no_analysis"]
         if analysis_type not in valid_analysis_types:
             return {
-                **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type,
+                **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type, "category": category,
                 "error": f"LLM返回的 analysis_type ('{analysis_type}') 无效。响应: {cleaned_response}"
             }
             
@@ -175,7 +190,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
                 # 即使是 '不适用' 的情况，也应该是一个包含 'analyzed_symbol': '不适用' 等信息的对象
                 # 如果这里为 null，但 analysis_type 是 stock_specific，说明LLM未完全遵循指示
                 return {
-                    **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type,
+                    **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type, "category": category,
                     "error": f"当 analysis_type 为 stock_specific 时，stock_specific_analysis 必须是一个非null的对象。响应: {cleaned_response}"
                 }
             valid_attention_levels = ["高度关注价值", "值得进一步观察", "影响有限或不明确", "注意潜在风险", "不适用"]
@@ -189,7 +204,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
         elif analysis_type == "macroeconomic":
             if not isinstance(macro_analysis_data, dict):
                  return {
-                    **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type,
+                    **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type, "category": category,
                     "error": f"当 analysis_type 为 macroeconomic 时，macro_analysis 必须是一个非null的对象。响应: {cleaned_response}"
                 }
             if not all(k in macro_analysis_data for k in ["key_macro_points", "potential_market_impact", "outlook_tendency", "reasoning"]):
@@ -201,6 +216,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
             "summary": summary,
             "sentiment": sentiment,
             "analysis_type": analysis_type,
+            "category": category,
             "stock_specific_analysis": stock_analysis_data if analysis_type == "stock_specific" else None,
             "macro_analysis": macro_analysis_data if analysis_type == "macroeconomic" else None
         }

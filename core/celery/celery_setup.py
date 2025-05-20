@@ -1,4 +1,3 @@
-# core/celery_app.py
 from celery import Celery
 import os
 
@@ -16,7 +15,7 @@ app = Celery(
     'stock_intelligence_tasks', 
     broker=REDIS_BROKER_URL,
     backend=REDIS_BACKEND_URL,
-    include=['app.tasks']  # 更新为包含任务模块的正确路径
+    include=['core.celery.tasks']  # 更新为包含任务模块的正确路径
 )
 
 # Celery 配置
