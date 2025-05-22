@@ -37,15 +37,17 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
             "analysis_type": None,
             "category": None,
             "stock_specific_analysis": None,
-            "macro_analysis": None
+            "macro_analysis": None,
+            "suggested_title": None
         }
 
     # 1. 定义期望的JSON输出结构的Python字典示例
     example_json_output_structure = {
+        "suggested_title": "基于内容生成的吸引人标题（不超过20字）",
         "summary": "快讯的简明摘要（不超过80字）",
         "sentiment": "快讯的整体市场情绪（选项：积极, 中性, 消极）",
         "analysis_type": "分析类型（选项：stock_specific, macroeconomic, general_news_no_analysis）",
-        "category": "快讯的分类（选项：重大先机, 行业趋势, 风险警示, 政策动态, 市场看点, 其他）",
+        "category": "快讯的分类（选项：重大先机, 行业趋势, 政策动态, 市场看点, 其他）",
         "stock_specific_analysis": {
             "analyzed_symbol": "被分析股票的代码（例如SZ000001）或 \"不适用\"",
             "key_info_points": ["从快讯中提取的与该股票直接相关的核心信息点（1-3个）"] or ["信息不足"],
@@ -70,17 +72,23 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
     # 使用三重引号确保 task 指令部分的字符串完整性
     system_prompt_tasks = """---
 任务指令：
-1. 生成摘要：对快讯内容进行总结，不超过80字。
-2. 判断情绪：评估快讯所传达的整体市场情绪，从【积极, 中性, 消极】中选择一个。
-3. 确定快讯分类：
+1. 生成标题：根据快讯内容，生成简洁有力、能够吸引读者注意的标题，不超过20字。
+   标题应具备以下特点：
+   - 准确反映快讯核心内容
+   - 包含关键的公司名称、数据或政策信息
+   - 使用适当的积极/消极情感词增强可读性
+   - 对于股票变动相关内容，应包含具体数字
+
+2. 生成摘要：对快讯内容进行总结，不超过80字。
+3. 判断情绪：评估快讯所传达的整体市场情绪，从【积极, 中性, 消极】中选择一个。
+4. 确定快讯分类：
    对快讯进行分类，从以下选项中选择一个最匹配的：
-   - "重大先机"：可能带来重大投资机会的积极消息、技术突破、高增长预期等
+   - "重大先机"：可能带来重大投资机会的积极消息、技术突破、高增长预、潜在风险、业绩下滑、负面事件期等
    - "行业趋势"：描述特定行业的发展动态、市场分析、供需变化等
-   - "风险警示"：针对特定股票的潜在风险、业绩下滑、负面事件等
    - "政策动态"：关于宏观经济政策、行业法规、政府举措等的快讯
-   - "市场看点"：其他值得关注的积极或中性市场信息
+   - "市场看点"：其他值得关注的市场信息
    - "其他"：不属于以上任何明确分类的快讯
-4. 进行深度分析：
+5. 进行深度分析：
    - 如果提供了明确的"关联股票"列表：选择其中最受快讯内容影响的一只股票进行分析。
      设置 `analysis_type` 为 `stock_specific`。
      填充 `stock_specific_analysis` 对象中的所有字段。`macro_analysis` 设为 `null`。
@@ -120,7 +128,8 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
     default_error_response = {
         "success": False,
         "summary": None, "sentiment": None, "analysis_type": None, "category": None,
-        "stock_specific_analysis": None, "macro_analysis": None
+        "stock_specific_analysis": None, "macro_analysis": None,
+        "suggested_title": None
     }
 
     try:
@@ -160,10 +169,14 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
         sentiment = analysis_data.get("sentiment")
         analysis_type = analysis_data.get("analysis_type")
         category = analysis_data.get("category")
+        suggested_title = analysis_data.get("suggested_title")
 
         if not all([summary, sentiment, analysis_type, category]):
             return {
-                **default_error_response, "summary": summary, "sentiment": sentiment, "analysis_type": analysis_type, "category": category,
+                **default_error_response, 
+                "summary": summary, "sentiment": sentiment, 
+                "analysis_type": analysis_type, "category": category,
+                "suggested_title": suggested_title,
                 "error": f"LLM返回的JSON缺少必要的顶层字段 (summary, sentiment, analysis_type, category)。响应: {cleaned_response}"
             }
         
@@ -171,7 +184,7 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
         if sentiment not in valid_sentiments:
             print(f"警告: LLM返回的情绪标签 '{sentiment}' 不在预设范围 {valid_sentiments}。")
 
-        valid_categories = ["重大先机", "行业趋势", "风险警示", "政策动态", "市场看点", "其他"]
+        valid_categories = ["重大先机", "行业趋势", "政策动态", "市场看点", "其他"]
         if category not in valid_categories:
             print(f"警告: LLM返回的分类标签 '{category}' 不在预设范围 {valid_categories}。")
 
@@ -218,7 +231,8 @@ def get_flash_analysis_from_llm(flash_content: str, target_symbols: list[dict] |
             "analysis_type": analysis_type,
             "category": category,
             "stock_specific_analysis": stock_analysis_data if analysis_type == "stock_specific" else None,
-            "macro_analysis": macro_analysis_data if analysis_type == "macroeconomic" else None
+            "macro_analysis": macro_analysis_data if analysis_type == "macroeconomic" else None,
+            "suggested_title": suggested_title
         }
 
     except APITimeoutError as e:
@@ -245,10 +259,14 @@ if __name__ == '__main__':
         print("\n--- 测试1: 针对特定股票的快讯 ---")
         analysis1 = get_flash_analysis_from_llm(test_flash_stock, target_symbols=test_symbols_stock)
         print(json.dumps(analysis1, ensure_ascii=False, indent=2))
+        if analysis1.get("success") and analysis1.get("suggested_title"):
+            print(f"生成标题: 《{analysis1['suggested_title']}》")
 
         print("\n--- 测试2: 宏观政策类快讯 (无特定关联股票传入) ---")
         analysis2 = get_flash_analysis_from_llm(test_flash_macro)
         print(json.dumps(analysis2, ensure_ascii=False, indent=2))
+        if analysis2.get("success") and analysis2.get("suggested_title"):
+            print(f"生成标题: 《{analysis2['suggested_title']}》")
         
         print("\n--- 测试3: 非常通用的新闻，可能无法深入分析 ---")
         analysis3 = get_flash_analysis_from_llm(test_flash_general)
