@@ -115,7 +115,7 @@ export default function Home() {
           setHasMore(uniqueNewItems.length >= ITEMS_PER_PAGE);
         }
       }
-    } catch (err) {
+    } catch {
       //console.error('加载更多失败:', err);
       setHasMore(false);
     } finally {
