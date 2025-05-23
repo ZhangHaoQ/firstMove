@@ -1,6 +1,5 @@
 import { MarketIndex } from '@/types/market';
-import { marketApiClient } from '@/lib/apiClient';
-import { config } from '@/lib/config';
+import { apiClient } from '@/lib/apiClient';
 
 // 定义市场API响应接口
 interface MarketApiResponse {
@@ -21,21 +20,8 @@ export const fetchMarketIndices = async (): Promise<MarketIndex[]> => {
   try {
     console.log('获取A股市场数据');
     
-    // 使用配置化的市场API参数
-    const params = {
-      app: 'CailianpressWeb',
-      fields: 'secu_name,secu_code,trade_status,change,change_px,last_px',
-      os: 'web',
-      secu_codes: 'sh000001,sz399001,sh000905,sz399006',
-      sv: '8.4.6',
-      sign: '7ddfd2eef7564087ff01a1782c724f43'
-    };
-    
-    // 使用配置化的API客户端
-    const data = await marketApiClient.get<MarketApiResponse>(
-      config.endpoints.market.stockBasic,
-      params
-    );
+    // 使用本地API代理路由而不是直接请求第三方API
+    const data = await apiClient.get<MarketApiResponse>('/api/market');
     
     if (data.code !== 200) {
       throw new Error(data.msg || '获取市场数据失败');
