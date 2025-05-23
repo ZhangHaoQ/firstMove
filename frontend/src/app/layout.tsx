@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "先机 | AI股票情报助手",
-  description: "实时收集和分析中文财经快讯与相关的股票信息",
+  title: "先机 | 智能财经资讯平台",
+  description: "基于AI的财经快讯分析平台，提供实时新闻、智能分析和投资洞察",
 };
 
 export default function RootLayout({
