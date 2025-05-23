@@ -169,7 +169,7 @@ const inferCategoryFromLLMAnalysis = (
   // 行业相关关键词
   if (contentLower.includes('行业') || contentLower.includes('板块') || 
       contentLower.includes('概念')) {
-    return '行业资讯';
+    return '行业趋势';
   }
   
   // 默认分类
