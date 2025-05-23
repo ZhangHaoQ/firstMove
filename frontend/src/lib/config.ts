@@ -1,8 +1,20 @@
 // 配置管理 - API配置
+
+// 根据环境动态确定API基础URL
+const getBaseUrl = () => {
+  // 如果是浏览器环境
+  if (typeof window !== 'undefined') {
+    // 生产环境使用当前域名
+    return window.location.origin;
+  }
+  // 服务器端渲染时的默认值
+  return process.env.API_BASE_URL || 'http://localhost:8000';
+};
+
 export const config = {
   // API基础配置
   api: {
-    baseUrl: 'http://localhost:8000',
+    baseUrl: getBaseUrl(),
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
