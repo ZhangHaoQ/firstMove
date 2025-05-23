@@ -1,12 +1,27 @@
 import { MarketIndex } from '@/types/market';
+import { marketApiClient } from '@/lib/apiClient';
+import { config } from '@/lib/config';
 
 // 获取市场指标数据
 export const fetchMarketIndices = async (): Promise<MarketIndex[]> => {
   try {
     console.log('获取A股市场数据');
-    // 使用财联社API
-    const response = await fetch('https://x-quote.cls.cn/v2/quote/a/web/stocks/basic?app=CailianpressWeb&fields=secu_name,secu_code,trade_status,change,change_px,last_px&os=web&secu_codes=sh000001,sz399001,sh000905,sz399006&sv=8.4.6&sign=7ddfd2eef7564087ff01a1782c724f43');
-    const data = await response.json();
+    
+    // 使用配置化的市场API参数
+    const params = {
+      app: 'CailianpressWeb',
+      fields: 'secu_name,secu_code,trade_status,change,change_px,last_px',
+      os: 'web',
+      secu_codes: 'sh000001,sz399001,sh000905,sz399006',
+      sv: '8.4.6',
+      sign: '7ddfd2eef7564087ff01a1782c724f43'
+    };
+    
+    // 使用配置化的API客户端
+    const data = await marketApiClient.get(
+      config.endpoints.market.stockBasic,
+      params
+    );
     
     if (data.code !== 200) {
       throw new Error(data.msg || '获取市场数据失败');

@@ -1,30 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import MainLayout from '@/components/layout/MainLayout';
 import NewsCard from '@/components/news/NewsCard';
 import { SENTIMENT_FILTER_OPTIONS } from '@/components/filters/FilterDropdown';
 import { useNotification } from '@/contexts/NotificationContext';
-
-// 定义新闻接口
-interface NewsItem {
-  id: string;
-  title: string;
-  content: string;
-  publishTime: string;
-  sentiment: 'positive' | 'neutral' | 'negative';
-  tags: string[];
-  stocks: Array<{
-    name: string;
-    symbol: string;
-    market: string;
-  }>;
-  coreInsight?: {
-    summary?: string;
-    keyPoint?: string;
-  };
-  category: string;
-}
+import { fetchLatestNews, fetchMoreNews, NewsItem } from '@/services/newsService';
 
 // 根据LLM分析结果推断新闻类别
 const inferCategoryFromLLMAnalysis = (llmAnalysis: any, content: string, sentiment: string, tags: string[]): string => {
@@ -83,7 +65,7 @@ const inferCategoryFromLLMAnalysis = (llmAnalysis: any, content: string, sentime
       content.includes(word) || 
       macroPointsText.includes(word) || 
       outlookTendency.includes(word)) ||
-      tags.some(tag => tag.includes('行业'))) {
+      tags.some((tag: string) => tag.includes('行业'))) {
       return '行业趋势';
     }
     
@@ -435,7 +417,7 @@ export default function Home() {
         // 类别为"重大先机"
         item.category === '重大先机' || 
         // 或者标签中包含"焦点"
-        (item.tags && item.tags.some(tag => tag.includes('焦点')))
+        (item.tags && item.tags.some((tag: string) => tag.includes('焦点')))
       );
       console.log(`重要快讯筛选后剩余${filtered.length}条`);
     }
@@ -449,9 +431,9 @@ export default function Home() {
         // 搜索标题
         item.title.toLowerCase().includes(query) ||
         // 搜索标签
-        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query))) ||
+        (item.tags && item.tags.some((tag: string) => tag.toLowerCase().includes(query))) ||
         // 搜索股票名称
-        (item.stocks && item.stocks.some(stock => stock.name.toLowerCase().includes(query)))
+        (item.stocks && item.stocks.some((stock: any) => stock.name.toLowerCase().includes(query)))
       );
       console.log(`搜索"${query}"后剩余${filtered.length}条`);
     }
@@ -466,30 +448,10 @@ export default function Home() {
     setPage(1);
     
     try {
-      // 构建查询参数
-      const params = new URLSearchParams({
-        skip: '0',
-        limit: ITEMS_PER_PAGE.toString(),
-      });
-      
-      const response = await fetch(`http://localhost:8000/flashes/latest/?${params}`);
-      let newsData: NewsItem[] = [];
-      
-      if (!response.ok) {
-        console.log('API请求失败，使用模拟数据');
-        newsData = getMockData();
-      } else {
-        const data = await response.json();
-        if (!data || data.length === 0) {
-          console.log('API返回空数据，使用模拟数据');
-          newsData = getMockData();
-        } else {
-          newsData = data.map(adaptApiDataToNewsItem);
-        }
-      }
+      const newsData = await fetchLatestNews(ITEMS_PER_PAGE);
       
       // 检查新数据
-      const currentIds = new Set(newsData.map(item => item.id));
+      const currentIds = new Set(newsData.map((item: any) => item.id));
       const prevIds = prevNewsIdsRef.current;
       
       // 如果不是第一次加载，检查是否有新数据并播放声音
@@ -502,7 +464,7 @@ export default function Home() {
           // 检查是否有重要快讯
           const hasImportant = newItems.some(item => 
             item.category === '重大先机' || 
-            (item.tags && item.tags.some(tag => tag.includes('焦点')))
+            (item.tags && item.tags.some((tag: string) => tag.includes('焦点')))
           );
           
           // 获取主要情感 (简单处理：使用第一条新快讯的情感)
@@ -520,9 +482,6 @@ export default function Home() {
       setHasMore(newsData.length >= ITEMS_PER_PAGE);
     } catch (err) {
       console.error('获取数据失败:', err);
-      // 使用模拟数据
-      const mockData = getMockData();
-      setAllNews(mockData);
       setError('获取数据失败，显示模拟数据');
       setHasMore(false);
     } finally {
@@ -538,40 +497,25 @@ export default function Home() {
     console.log(`加载更多数据，页码: ${page + 1}`);
     
     try {
-      // 构建查询参数
-      const params = new URLSearchParams({
-        skip: (page * ITEMS_PER_PAGE).toString(),
-        limit: ITEMS_PER_PAGE.toString(),
-      });
+      const newItems = await fetchMoreNews(page, ITEMS_PER_PAGE);
       
-      const response = await fetch(`http://localhost:8000/flashes/latest/?${params}`);
-      let newItems: NewsItem[] = [];
-      
-      if (!response.ok) {
-        console.log('加载更多失败，API错误');
+      if (!newItems || newItems.length === 0) {
+        console.log('没有更多数据');
         setHasMore(false);
       } else {
-        const data = await response.json();
-        if (!data || data.length === 0) {
-          console.log('没有更多数据');
+        // 去除已经存在的项目，避免重复ID
+        const existingIds = new Set(allNews.map((item: any) => item.id));
+        const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
+        
+        console.log(`获取到${newItems.length}条新数据，过滤重复后剩余${uniqueNewItems.length}条`);
+        
+        if (uniqueNewItems.length === 0) {
+          console.log('没有新的唯一数据了');
           setHasMore(false);
         } else {
-          newItems = data.map(adaptApiDataToNewsItem);
-          
-          // 去除已经存在的项目，避免重复ID
-          const existingIds = new Set(allNews.map(item => item.id));
-          const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
-          
-          console.log(`获取到${newItems.length}条新数据，过滤重复后剩余${uniqueNewItems.length}条`);
-          
-          if (uniqueNewItems.length === 0) {
-            console.log('没有新的唯一数据了');
-            setHasMore(false);
-          } else {
-            setAllNews(prev => [...prev, ...uniqueNewItems]);
-            setPage(prev => prev + 1);
-            setHasMore(uniqueNewItems.length >= ITEMS_PER_PAGE);
-          }
+          setAllNews((prev: any) => [...prev, ...uniqueNewItems]);
+          setPage((prev: any) => prev + 1);
+          setHasMore(uniqueNewItems.length >= ITEMS_PER_PAGE);
         }
       }
     } catch (err) {
@@ -648,7 +592,7 @@ export default function Home() {
 
         {/* 新闻卡片列表 */}
         <div className="grid grid-cols-1 gap-4">
-          {filteredNews.map((item, index) => {
+          {filteredNews.map((item: any, index: any) => {
             // 只在最后一个元素上设置ref，用于触发无限滚动
             const isLastElement = index === filteredNews.length - 1;
             
