@@ -49,7 +49,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [isOpen, onClose]);
 
   // 处理设置变化
-  const handleSettingChange = (key: keyof NotificationSettings, value: any) => {
+  const handleSettingChange = (key: keyof NotificationSettings, value: boolean | string | number) => {
     setLocalSettings(prev => ({
       ...prev,
       [key]: value

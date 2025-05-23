@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { MarketIndex } from '@/types/market';
 import { fetchMarketIndices } from '@/services/marketService';
 
@@ -40,10 +40,10 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     }
   };
 
-  // 刷新市场数据
-  const refreshMarketData = async () => {
+  // 刷新市场数据 - 使用useCallback稳定函数引用
+  const refreshMarketData = useCallback(async () => {
     await fetchMarketData();
-  };
+  }, []);
 
   // 初始加载和定时刷新
   useEffect(() => {
@@ -53,7 +53,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     const intervalId = setInterval(refreshMarketData, refreshInterval);
     
     return () => clearInterval(intervalId);
-  }, [refreshInterval]);
+  }, [refreshInterval, refreshMarketData]);
 
   const value = {
     marketIndices,

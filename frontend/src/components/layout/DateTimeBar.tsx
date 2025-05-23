@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import FilterDropdown, { SENTIMENT_FILTER_OPTIONS } from '@/components/filters/FilterDropdown';
 import SettingsModal from '@/components/settings/SettingsModal';
 import GlobalUpdateTimer from './GlobalUpdateTimer';
@@ -35,22 +35,8 @@ export default function DateTimeBar({
     setIsMounted(true);
   }, []);
   
-  useEffect(() => {
-    if (!isMounted) return; // 确保组件已挂载
-
-    // 设置日期时间
-    updateDateTime();
-    
-    // 每秒更新一次
-    const timer = setInterval(() => {
-      updateDateTime();
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [isMounted]); // 依赖 isMounted
-  
   // 更新日期时间
-  const updateDateTime = () => {
+  const updateDateTime = useCallback(() => {
     if (!isMounted) return; // 再次检查，确保安全
     
     const now = new Date();
@@ -75,7 +61,21 @@ export default function DateTimeBar({
       // 作为备用，显示一个更简单的格式或者错误提示
       setCurrentDateTime(now.toLocaleString('zh-CN') + " (格式化错误)");
     }
-  };
+  }, [isMounted]);
+  
+  useEffect(() => {
+    if (!isMounted) return; // 确保组件已挂载
+
+    // 设置日期时间
+    updateDateTime();
+    
+    // 每秒更新一次
+    const timer = setInterval(() => {
+      updateDateTime();
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [isMounted, updateDateTime]); // 添加updateDateTime依赖
   
   // 切换仅显示勾选状态
   const toggleDisplayOnly = () => {
@@ -145,9 +145,9 @@ export default function DateTimeBar({
               placeholder="搜索快讯..."
               value={searchQuery}
               onChange={handleSearchInputChange}
-              className="w-full text-xs py-1 pl-7 pr-2 rounded-md border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 transition-colors"
+              className="w-full text-sm py-1.5 pl-8 pr-8 rounded-md border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-500 focus:bg-white focus:border-blue-300 focus:ring-1 focus:ring-blue-200 focus:text-gray-900 transition-colors"
             />
-            <svg className="w-3 h-3 text-gray-400 absolute left-2.5 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             {searchQuery && (
@@ -155,7 +155,7 @@ export default function DateTimeBar({
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 onClick={clearSearch}
               >
-                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

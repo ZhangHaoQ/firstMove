@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react';
 import SentimentBadge from './SentimentBadge';
 import TopicTag from './TopicTag';
 import StockPriceChange from '../stocks/StockPriceChange';
@@ -37,9 +36,6 @@ interface NewsCardProps {
 }
 
 export default function NewsCard({ news }: NewsCardProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
   // 格式化时间为24小时制时间，精确到秒
   const formatExactTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -50,17 +46,6 @@ export default function NewsCard({ news }: NewsCardProps) {
     const seconds = date.getSeconds().toString().padStart(2, '0');
     
     return `${hours}:${minutes}:${seconds}`;
-  };
-
-  const toggleBookmark = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
-  };
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // 实现分享功能
-    alert('分享功能尚未实现');
   };
 
   // 获取基于情感的样式

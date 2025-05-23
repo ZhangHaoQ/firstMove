@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Clock } from 'lucide-react';
 
 interface GlobalUpdateTimerProps {
@@ -27,10 +27,10 @@ const GlobalUpdateTimer: React.FC<GlobalUpdateTimerProps> = ({
   }, []);
 
   // 重置计时器
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     setLastUpdated(new Date());
     setNextUpdateIn(interval);
-  };
+  }, [interval]);
 
   // 倒计时逻辑
   useEffect(() => {
@@ -52,7 +52,7 @@ const GlobalUpdateTimer: React.FC<GlobalUpdateTimerProps> = ({
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [interval, lastUpdated, onTimeUp, isMounted]);
+  }, [interval, lastUpdated, onTimeUp, isMounted, resetTimer]);
 
   // 格式化最后更新时间
   const formatLastUpdated = () => {

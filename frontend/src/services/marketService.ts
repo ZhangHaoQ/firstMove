@@ -2,6 +2,20 @@ import { MarketIndex } from '@/types/market';
 import { marketApiClient } from '@/lib/apiClient';
 import { config } from '@/lib/config';
 
+// 定义市场API响应接口
+interface MarketApiResponse {
+  code: number;
+  msg?: string;
+  data: Record<string, {
+    secu_code: string;
+    secu_name: string;
+    trade_status: string;
+    change: number;
+    change_px: number;
+    last_px: number;
+  }>;
+}
+
 // 获取市场指标数据
 export const fetchMarketIndices = async (): Promise<MarketIndex[]> => {
   try {
@@ -18,7 +32,7 @@ export const fetchMarketIndices = async (): Promise<MarketIndex[]> => {
     };
     
     // 使用配置化的API客户端
-    const data = await marketApiClient.get(
+    const data = await marketApiClient.get<MarketApiResponse>(
       config.endpoints.market.stockBasic,
       params
     );

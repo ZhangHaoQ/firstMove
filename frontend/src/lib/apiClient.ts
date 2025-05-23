@@ -1,7 +1,7 @@
 import { config } from './config';
 
 // API响应类型
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   success: boolean;
   message?: string;
@@ -10,9 +10,9 @@ export interface ApiResponse<T = any> {
 // API错误类型
 export class ApiError extends Error {
   public status: number;
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, status: number, details?: any) {
+  constructor(message: string, status: number, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -43,14 +43,14 @@ export class ApiClient {
   }
 
   // 记录日志
-  private log(level: 'info' | 'error' | 'warn', message: string, data?: any) {
+  private log(level: 'info' | 'error' | 'warn', message: string, data?: unknown) {
     if (config.dev.enableLogs) {
       console[level](`[ApiClient] ${message}`, data || '');
     }
   }
 
   // 发起请求
-  public async request<T = any>(
+  public async request<T = unknown>(
     endpoint: string,
     options: RequestInit & RequestConfig = {}
   ): Promise<T> {
@@ -122,7 +122,7 @@ export class ApiClient {
   }
 
   // GET请求
-  public async get<T = any>(endpoint: string, params?: Record<string, string>, options?: RequestConfig): Promise<T> {
+  public async get<T = unknown>(endpoint: string, params?: Record<string, string>, options?: RequestConfig): Promise<T> {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams(params);
@@ -133,7 +133,7 @@ export class ApiClient {
   }
 
   // POST请求
-  public async post<T = any>(endpoint: string, data?: any, options?: RequestConfig): Promise<T> {
+  public async post<T = unknown>(endpoint: string, data?: unknown, options?: RequestConfig): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -142,7 +142,7 @@ export class ApiClient {
   }
 
   // PUT请求
-  public async put<T = any>(endpoint: string, data?: any, options?: RequestConfig): Promise<T> {
+  public async put<T = unknown>(endpoint: string, data?: unknown, options?: RequestConfig): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -151,7 +151,7 @@ export class ApiClient {
   }
 
   // DELETE请求
-  public async delete<T = any>(endpoint: string, options?: RequestConfig): Promise<T> {
+  public async delete<T = unknown>(endpoint: string, options?: RequestConfig): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 }
