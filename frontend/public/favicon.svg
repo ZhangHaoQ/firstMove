@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <!-- 背景 -->
+  <rect width="16" height="16" rx="3" fill="#2563EB"/>
+  
+  <!-- 使用Header中相同的上升趋势图标 -->
+  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" stroke="white" fill="none" d="M8.5 4.5h5.5m0 0v5.5m0-5.5l-5.5 5.5-2.75-2.75-4 4" />
+</svg> 

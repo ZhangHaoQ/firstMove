@@ -44,7 +44,7 @@ export const fetchMarketIndices = async (): Promise<MarketIndex[]> => {
       });
     });
     
-    console.log(`获取到 ${indices.length} 个A股市场指标`);
+    //console.log(`获取到 ${indices.length} 个A股市场指标`);
     return indices;
   } catch (error) {
     console.error('获取市场指标数据失败:', error);

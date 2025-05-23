@@ -39,7 +39,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('市场数据代理请求失败:', error);
+    //console.error('市场数据代理请求失败:', error);
     
     // 返回错误响应
     return Response.json(

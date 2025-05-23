@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- 背景圆形 -->
+  <circle cx="16" cy="16" r="16" fill="#2563EB"/>
+  
+  <!-- 使用Header中相同的上升趋势图标，放大版本 -->
+  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" stroke="white" fill="none" d="M17 9h11m0 0v11m0-11l-11 11-5.5-5.5-8 8" />
+</svg> 

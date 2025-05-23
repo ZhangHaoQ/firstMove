@@ -56,7 +56,7 @@ export default function Home() {
         const newItems = newsData.filter(item => !prevIds.has(item.id));
         
         if (newItems.length > 0) {
-          console.log(`检测到${newItems.length}条新快讯`);
+          // console.log(`检测到${newItems.length}条新快讯`);
           
           // 检查是否有重要快讯
           const hasImportant = newItems.some(item => 
@@ -91,23 +91,23 @@ export default function Home() {
     if (isLoadingMore || !hasMore) return;
     
     setIsLoadingMore(true);
-    console.log(`加载更多数据，页码: ${page + 1}`);
+    //console.log(`加载更多数据，页码: ${page + 1}`);
     
     try {
       const newItems = await fetchMoreNews(page, ITEMS_PER_PAGE);
       
       if (!newItems || newItems.length === 0) {
-        console.log('没有更多数据');
+        //console.log('没有更多数据');
         setHasMore(false);
       } else {
         // 去除已经存在的项目，避免重复ID
         const existingIds = new Set(allNews.map((item: NewsItem) => item.id));
         const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
         
-        console.log(`获取到${newItems.length}条新数据，过滤重复后剩余${uniqueNewItems.length}条`);
+        //console.log(`获取到${newItems.length}条新数据，过滤重复后剩余${uniqueNewItems.length}条`);
         
         if (uniqueNewItems.length === 0) {
-          console.log('没有新的唯一数据了');
+          //console.log('没有新的唯一数据了');
           setHasMore(false);
         } else {
           setAllNews((prev: NewsItem[]) => [...prev, ...uniqueNewItems]);
@@ -116,7 +116,7 @@ export default function Home() {
         }
       }
     } catch (err) {
-      console.error('加载更多失败:', err);
+      //console.error('加载更多失败:', err);
       setHasMore(false);
     } finally {
       setIsLoadingMore(false);
@@ -168,7 +168,7 @@ export default function Home() {
     // 情感筛选
     if (sentimentFilter !== 'all') {
       filtered = filtered.filter(item => item.sentiment === sentimentFilter);
-      console.log(`情感筛选"${sentimentFilter}"后剩余${filtered.length}条`);
+      //console.log(`情感筛选"${sentimentFilter}"后剩余${filtered.length}条`);
     }
     
     // 重要快讯筛选
@@ -177,7 +177,7 @@ export default function Home() {
         item.category === '重大先机' || 
         (item.tags && item.tags.some((tag: string) => tag.includes('焦点')))
       );
-      console.log(`重要快讯筛选后剩余${filtered.length}条`);
+      //console.log(`重要快讯筛选后剩余${filtered.length}条`);
     }
     
     // 搜索筛选
@@ -193,7 +193,7 @@ export default function Home() {
         // 搜索股票名称
         (item.stocks && item.stocks.some((stock: Stock) => stock.name.toLowerCase().includes(query)))
       );
-      console.log(`搜索"${query}"后剩余${filtered.length}条`);
+      //console.log(`搜索"${query}"后剩余${filtered.length}条`);
     }
     
     setFilteredNews(filtered);
@@ -201,25 +201,25 @@ export default function Home() {
 
   // 处理筛选器变化
   const handleSentimentFilterChange = (value: string) => {
-    console.log('情感筛选条件变为:', value);
+    //console.log('情感筛选条件变为:', value);
     setSentimentFilter(value);
   };
 
   // 处理只看重要快讯的变化
   const handleDisplayImportantOnlyChange = (value: boolean) => {
-    console.log('只看重要快讯变为:', value);
+    //console.log('只看重要快讯变为:', value);
     setDisplayImportantOnly(value);
   };
   
   // 处理搜索变化（带防抖）
   const handleSearchChange = (value: string) => {
-    console.log('搜索输入:', value);
+    //console.log('搜索输入:', value);
     setSearchInput(value);
   };
   
   // 处理手动刷新
   const handleRefresh = () => {
-    console.log('手动刷新数据...');
+    //console.log('手动刷新数据...');
     loadInitialData();
   };
 

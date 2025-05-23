@@ -72,9 +72,9 @@ const adaptApiDataToNewsItem = (apiData: ApiFlashData): NewsItem => {
   
   // 记录标题生成日志 (开发环境)
   if (config.dev.enableLogs) {
-    console.log(`[标题生成] ID: ${apiData.flash_id || 'unknown'}`);
-    console.log(`  - LLM生成: ${llmAnalysis.suggested_title || '(无)'}`);
-    console.log(`  - 最终使用: ${title}`);
+    //console.log(`[标题生成] ID: ${apiData.flash_id || 'unknown'}`);
+    //console.log(`  - LLM生成: ${llmAnalysis.suggested_title || '(无)'}`);
+    //console.log(`  - 最终使用: ${title}`);
   }
   
   // 确定情感类型
@@ -285,7 +285,7 @@ export const fetchNewsData = async (params: FetchNewsParams = {}): Promise<NewsI
     const data = await apiClient.get(config.endpoints.flashes.latest, queryParams);
     
     if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log('API返回空数据，使用模拟数据');
+      //console.log('API返回空数据，使用模拟数据');
       // 计算分页参数
       const skip = parseInt(params.skip || '0');
       const limit = parseInt(params.limit || '20');
@@ -298,7 +298,7 @@ export const fetchNewsData = async (params: FetchNewsParams = {}): Promise<NewsI
     return data.map(adaptApiDataToNewsItem);
   } catch (error) {
     console.error('获取新闻数据失败:', error);
-    console.log('API请求失败，使用模拟数据');
+    //console.log('API请求失败，使用模拟数据');
     // 计算分页参数
     const skip = parseInt(params.skip || '0');
     const limit = parseInt(params.limit || '20');
