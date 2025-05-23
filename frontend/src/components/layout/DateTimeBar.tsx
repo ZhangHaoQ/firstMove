@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import FilterDropdown, { SENTIMENT_FILTER_OPTIONS } from '@/components/filters/FilterDropdown';
 import SettingsModal from '@/components/settings/SettingsModal';
-import GlobalUpdateTimer from './GlobalUpdateTimer';
 import { Clock } from 'lucide-react';
 
 interface DateTimeBarProps {
@@ -127,11 +126,14 @@ export default function DateTimeBar({
             <span className="text-xs text-gray-600">{isMounted ? currentDateTime : "加载中..."}</span>
             <span className="mx-2 text-gray-300">|</span>
             <span className="text-xs text-gray-600">
+              {/* 临时注释自动刷新，避免重复请求
               <GlobalUpdateTimer 
                 onTimeUp={onRefresh}
                 showIcon={false}
                 hideLastUpdate={true}
               />
+              */}
+              手动刷新模式
             </span>
           </div>
           
